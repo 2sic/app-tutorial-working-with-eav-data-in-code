@@ -28,11 +28,6 @@
     // Prepare the data - get all categories through the pipeline
     public override void CustomizeData()
     {
-        // Sort by FullName
-        //var sortedAuthors = CreateSource<ValueSort>(App.Data["Author"]);
-        //sortedAuthors.Attributes = "FullName";
-        //Data.Attach("SortByFullName", sortedAuthors);
-
         // Sort by Fullname descending
         var sortedAuthorsDesc = CreateSource<ValueSort>(App.Data["Author"]);
         sortedAuthorsDesc.Attributes = "FullName";

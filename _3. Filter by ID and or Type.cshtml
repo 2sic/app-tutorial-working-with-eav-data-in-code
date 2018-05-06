@@ -9,9 +9,7 @@
 		var entireCache = CreateSource();
 
 	    var allAuthors = App.Data["Author"];
-        Data.Attach("Authors", allAuthors);
 	    var allCategories = App.Data["Category"];
-        Data.Attach("Categories", allCategories);
 		
         // Find some IDs to use as filters in the next lines of code (first and last)
 		var firstAuthorId = allAuthors.List.FirstOrDefault().EntityId; 
@@ -20,21 +18,17 @@
 		// A source which can filter by one or more IDs
 		var filterById = CreateSource<EntityIdFilter>();
         filterById.EntityIds = firstAuthorId.ToString();
-        Data.Attach("FilterId", filterById);
         
         var filterByManyIds = CreateSource<EntityIdFilter>();
 		filterByManyIds.EntityIds = firstAuthorId + "," + lastAuthorId; 
-        Data.Attach("FilterManyIds", filterByManyIds);
 
 		// Now the magic! chain pipelines :)
 		var authorWithId = CreateSource<EntityIdFilter>(allAuthors); // create filter, which attaches to the Out of the previous data source
-		authorWithId.EntityIds = firstAuthorId.ToString(); // should work, it's an author
-        Data.Attach("TypeAndIdFilterWorks", authorWithId);
+		authorWithId.EntityIds = firstAuthorId.ToString(); // this will work, it's an author
 
 		// Another chain - but this one will deliver an empty list
 		var authorWithSimpleContentId = CreateSource<EntityIdFilter>(allCategories);
-		authorWithSimpleContentId.EntityIds = firstAuthorId.ToString(); // should NOT work, it's a SimpleContent Entity, not! an author
-        Data.Attach("TypeAndIdFilterFails", authorWithSimpleContentId);
+		authorWithSimpleContentId.EntityIds = firstAuthorId.ToString(); // this will not return anything, it's a SimpleContent Entity, not! an author
         
         // An important note
         // Such data-preparation code should usually be inside a PrepareData section, not inline
@@ -62,27 +56,27 @@
 			<tr>
 				<td>Content-Type Filter</td>
 				<td><em>Author</em></td>
-				<td>@Data["Authors"].List.Count()</td>
+				<td>@allAuthors.List.Count()</td>
 			</tr>
 			<tr>
 				<td>ID Filter</td>
 				<td><em>@filterById.EntityIds</em></td>
-				<td>@Data["FilterId"].List.Count()</td>
+				<td>@filterById.List.Count()</td>
 			</tr>
 			<tr>
 				<td>Multiple-IDs Filter</td>
 				<td><em>@filterByManyIds.EntityIds</em></td>
-				<td>@Data["FilterManyIds"].List.Count()</td>
+				<td>@filterByManyIds.List.Count()</td>
 			</tr>
 			<tr>
 				<td>Chain Type and ID Filter (should work)</td>
 				<td><em>Author</em> &amp; <em>@authorWithId.EntityIds</em></td>
-				<td>@Data["TypeAndIdFilterWorks"].List.Count()</td>
+				<td>@authorWithId.List.Count()</td>
 			</tr>
 			<tr>
 				<td>Chain Type and ID-Filter (should not work)</td>
 				<td><em>Categories</em> &amp; <em>@authorWithSimpleContentId.EntityIds</em> </td>
-				<td>@Data["TypeAndIdFilterFails"].List.Count()</td>
+				<td>@authorWithSimpleContentId.List.Count()</td>
 			</tr>
 		</table>
 	</div>
