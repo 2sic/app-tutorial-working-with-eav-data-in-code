@@ -1,0 +1,59 @@
+<div class="BasicContentWithPreview sc-element">
+	@Content.Toolbar
+	<h1><span>@Content.Title</span></h1>
+	<h2>Get courses, show them with related (child) categories</h2>
+
+    <ul>
+		@foreach (var course in AsDynamic(App.Data["Course"]))
+		{
+			<li>
+				<strong>@course.Title @course.Toolbar</strong> 
+				@if (course.Author != null)
+				{
+					<text> by  @(course.Author.Count > 0 ? course.Author[0].FullName : "unknown")</text>
+				}
+				@if (course.Categories != null)
+				{<br/>
+					<em>Categories: 
+						@foreach (var cat in course.Categories)
+						{
+							@cat.Name
+							<text>,</text>
+						}
+					</em>
+				}
+				else
+				{
+					<br/><em>no category</em>
+				}
+			</li>
+		}
+	</ul>
+	
+
+	<h2>
+		Get categories with relating (parent) courses
+	</h2>
+	@{
+		// A source which can filter by Content-Type (EntityType)
+	    var allCategories = App.Data["Category"];
+	}
+	<ul>
+		@foreach (var cat in allCategories.List)
+		{
+			// Here's the short version for the list of parent courses
+			var courses = cat.Relationships.AllParents	// all parents, no matter what entity-type
+				.Where(c => c.Type.Name == "Course");			// now only the courses
+
+			var category = AsDynamic(cat);
+			<li>
+				<strong>@category.Name</strong>
+				<ol>
+					@foreach (var course in AsDynamic(courses))
+					{
+						<li>@course.Title</li>
+					}
+				</ol>
+			</li>
+		}
+	</ul></div>

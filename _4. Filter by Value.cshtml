@@ -1,0 +1,32 @@
+@using ToSic.Eav.DataSources
+@functions
+{
+    private string attrToFilter = "Website";
+    private string filterValue = "http://www.2sic.com/";
+
+    // Note: this code requires 2sxc version 6.2 to work
+
+    // Prepare the data - get all categories through the pipeline
+    public override void CustomizeData()
+    {
+        // Now the magic! chain pipelines - combine an App.Data["Author"] which is a pipeline with the next one
+        var filteredAuthors = CreateSource<ValueFilter>(App.Data["Author"]); // create filter, which attaches to the Out of the previous data source
+        filteredAuthors.Attribute = attrToFilter;
+        filteredAuthors.Value = filterValue;
+        Data.Attach("Filtered", filteredAuthors);
+    }
+
+}
+<div class="sc-element">
+	@Content.Toolbar
+	<h1 class="Title Purple"><span>@Content.Title</span></h1>
+
+	<p>Show only authors with the <em>@attrToFilter</em> = "@filterValue"</p>
+
+	<ul>
+		@foreach (var a in AsDynamic(Data["Filtered"]))
+		{
+			<li>@a.FullName</li>;
+		}
+	</ul>
+</div>

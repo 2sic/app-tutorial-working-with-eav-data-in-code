@@ -1,0 +1,49 @@
+@using ToSic.Eav.DataSources
+@functions
+{
+    // Note: this code requires 2sxc version 6.2 to work
+
+    // Prepare the data - get all categories through the pipeline
+    public override void CustomizeData()
+    {
+        // Now filter for the URL-Param if it exists...
+        // the following syntax uses the property-providers
+        var authorFilter = CreateSource<EntityIdFilter>();	// create filter, which attaches to the Out of the previous data source
+        authorFilter.EntityIds = "[QueryString:Author]";		// this will get resolved automatically
+
+        Data.Attach("Details", authorFilter);
+    }
+}
+<div class="BasicContentWithPreview sc-element">
+	@Content.Toolbar
+	<h1 class="Title Purple"><span>@Content.Title</span></h1>
+
+	<p>Click on an author to place it's ID in the URL and then see it's details. The filter uses the token [QueryString:Author] which automatically picks up the correct value.</p>
+
+	<ul>
+		@foreach (var author in AsDynamic(App.Data["Author"]))
+		{
+			<li><a href="?author=@author.EntityId">@author.FullName</a>
+				@if (DotNetNuke.Common.Globals.IsEditMode())
+				{
+					<ul class='sc-menu' data-toolbar='[{ "entityId": @author.EntityId, "action": "edit" }]' style="display: inline; position: static"></ul>
+				}
+		</li>;
+		}
+		<li><a href="?">Unselect</a></li>
+	</ul>
+	
+	@if (Data["Details"].List.Count() > 0)
+	{
+        var authorDetails = AsDynamic(Data["Details"]).First();
+	    <p>
+	        Filter was resolved to @((Data["Details"].Source as EntityIdFilter).EntityIds) 
+	        so it found @authorDetails.FullName
+	    </p>
+		<img src="@authorDetails.Photo?w=200"/>
+	}
+	else
+	{
+		<p>No author selected</p>
+	}
+</div>

@@ -1,0 +1,18 @@
+
+<div class="BasicContentWithPreview sc-element">
+	<h1>@Content.Title</h1>
+    @Content.Toolbar
+	<p>
+		This just gets all authors from the DB and shows them. It also has a special "new" button which will pre-fill the new entity
+	</p>
+    <ul>
+        @foreach (var author in AsDynamic(App.Data["Author"]))
+        {
+            <li>@author.FullName</li>
+        }
+    </ul>
+ 
+    @Edit.Toolbar(actions: "new", contentType: "Author", 
+        prefill: new {Website = "http://www.2sic.com/"},
+        settings: new { show = "always", hover = "none"})
+</div>

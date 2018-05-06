@@ -1,0 +1,100 @@
+@using ToSic.Eav.DataSources
+@{
+	// Important note
+	// Most of what you see here can also be done using visual query
+	// that's often easier - and easier to adjust
+	// so this works, you can use it and in advanced scenarios it's the best choice
+	// but often you'll be better off just using visual query
+
+	// Option 1: this is the simpler method, using just a data-source
+	// it's easy to use and access data, but won't add it to the module-instance
+	// so the data won't appear in the DNN search
+	
+	// Sort by FullName
+	var sortedAuthors = CreateSource<ValueSort>(App.Data["Author"]);
+	sortedAuthors.Attributes = "FullName";
+
+	// simple example with sort by internal EntityId
+	var sortedAuthorsById = CreateSource<ValueSort>(App.Data["Author"]);
+	sortedAuthorsById.Attributes = "EntityId";
+}
+@functions{
+		// Option 2: complicated method - ensure it's in search
+		// this mechanisms with CustomizeData() is a bit complicated
+		// but it ensures that the data will also appear in search
+		// if you don't care about the search, you can write the same code 
+		// outside of CustomizeData() and everything will be simpler
+
+    // Prepare the data - get all categories through the pipeline
+    public override void CustomizeData()
+    {
+        // Sort by FullName
+        //var sortedAuthors = CreateSource<ValueSort>(App.Data["Author"]);
+        //sortedAuthors.Attributes = "FullName";
+        //Data.Attach("SortByFullName", sortedAuthors);
+
+        // Sort by Fullname descending
+        var sortedAuthorsDesc = CreateSource<ValueSort>(App.Data["Author"]);
+        sortedAuthorsDesc.Attributes = "FullName";
+        sortedAuthorsDesc.Directions = "desc";
+        Data.Attach("SortByFullNameDesc", sortedAuthorsDesc);
+
+        // Sort by 2 fields
+        var sortedAuthorsMult = CreateSource<ValueSort>(App.Data["Author"]);
+        sortedAuthorsMult.Attributes = "Website,FullName";
+        sortedAuthorsMult.Directions = "asc, desc";
+        Data.Attach("SortByMultiple", sortedAuthorsMult);
+    }
+}
+
+
+<div class="BasicContentWithPreview sc-element">
+	@Content.Toolbar
+	<h1><span>@Content.Title</span></h1>
+
+	<p>Show all authors sorted in various ways</p>
+	<ul>
+		<li>Sorted FullName A-Z
+			<ol>
+				@foreach (var a in AsDynamic(sortedAuthors.List))
+				{
+					<li>@a.FullName</li>;
+				}
+			</ol>
+		</li>
+		<li>Now with reversed sort
+			<ol>
+				@foreach (var a in AsDynamic(Data["SortByFullNameDesc"]))
+				{
+					<li>@a.FullName</li>;
+				}
+			</ol>			
+		</li>
+		<li>And now with multi-field sort (first url ascending, then name descending)
+			<ol>
+				@foreach (var a in AsDynamic(Data["SortByMultiple"]))
+				{
+					<li>@a.FullName on <a href="@a.Website">@a.Website</a></li>;
+				}
+			</ol>
+		</li>
+		<li>
+			Now sorted by EntityId (also works w/EntityTitle)
+			<ol>
+				@foreach (var a in AsDynamic(sortedAuthorsById.List))
+				{
+					<li>@a.FullName (@a.EntityId)</li>;
+				}
+			</ol>
+		</li>	
+		<li>
+			Sorting a List using LINQ (applying a different sort than before)
+			<ol>
+				@foreach (var a in AsDynamic(sortedAuthors.List).OrderBy(x => x.EntityId))
+				{
+					<li>@a.FullName</li>;
+				}
+			</ol>
+		</li>
+	</ul>
+</div>

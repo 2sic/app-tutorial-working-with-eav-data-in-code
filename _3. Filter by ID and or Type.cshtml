@@ -1,0 +1,89 @@
+@using ToSic.Eav.DataSources
+
+<div class="BasicContentWithPreview sc-element">
+	@Content.Toolbar
+	<h1 class="Title Purple"><span>@Content.Title</span></h1>
+
+	@{
+		// get the DataSource of the current app (the in-memory cache) - it's like accessing the entire DB directly
+		var entireCache = CreateSource();
+
+	    var allAuthors = App.Data["Author"];
+        Data.Attach("Authors", allAuthors);
+	    var allCategories = App.Data["Category"];
+        Data.Attach("Categories", allCategories);
+		
+        // Find some IDs to use as filters in the next lines of code (first and last)
+		var firstAuthorId = allAuthors.List.FirstOrDefault().EntityId; 
+		var lastAuthorId = allAuthors.List.LastOrDefault().EntityId; 
+
+		// A source which can filter by one or more IDs
+		var filterById = CreateSource<EntityIdFilter>();
+        filterById.EntityIds = firstAuthorId.ToString();
+        Data.Attach("FilterId", filterById);
+        
+        var filterByManyIds = CreateSource<EntityIdFilter>();
+		filterByManyIds.EntityIds = firstAuthorId + "," + lastAuthorId; 
+        Data.Attach("FilterManyIds", filterByManyIds);
+
+		// Now the magic! chain pipelines :)
+		var authorWithId = CreateSource<EntityIdFilter>(allAuthors); // create filter, which attaches to the Out of the previous data source
+		authorWithId.EntityIds = firstAuthorId.ToString(); // should work, it's an author
+        Data.Attach("TypeAndIdFilterWorks", authorWithId);
+
+		// Another chain - but this one will deliver an empty list
+		var authorWithSimpleContentId = CreateSource<EntityIdFilter>(allCategories);
+		authorWithSimpleContentId.EntityIds = firstAuthorId.ToString(); // should NOT work, it's a SimpleContent Entity, not! an author
+        Data.Attach("TypeAndIdFilterFails", authorWithSimpleContentId);
+        
+        // An important note
+        // Such data-preparation code should usually be inside a PrepareData section, not inline
+        // I just placed it inline, because the output-code below sometimes shows stream-configuration (like the ID it filtered)
+        // But usally you want to hide such internal pipeline configurations in the PrepareData and you usually don't access the stream-config again
+        // So don't do it like this at home :)
+	}
+
+	<div>
+		<p>
+			The following table shows the results of the code. The first examples just get data based on simple criteria (like: is author, has the ID @firstAuthorId, etc.). The last examples <em>chain</em> the filters, so they look for an ID <em>within</em> the previous filter Authors.
+		</p>
+		<h2>Statistics</h2>
+		<table style="padding: 2px" width="100%">
+			<tr>
+				<th style="text-align: left">Pipeline</th>
+				<th style="text-align: left">Filter parameters</th>
+				<th style="text-align: left">Result Count</th>
+			</tr>
+			<tr>
+				<td style="width: 400px">Cache / Root Source</td>
+				<td></td>
+				<td>@entireCache.Out["Default"].List.Count()</td>
+			</tr>
+			<tr>
+				<td>Content-Type Filter</td>
+				<td><em>Author</em></td>
+				<td>@Data["Authors"].List.Count()</td>
+			</tr>
+			<tr>
+				<td>ID Filter</td>
+				<td><em>@filterById.EntityIds</em></td>
+				<td>@Data["FilterId"].List.Count()</td>
+			</tr>
+			<tr>
+				<td>Multiple-IDs Filter</td>
+				<td><em>@filterByManyIds.EntityIds</em></td>
+				<td>@Data["FilterManyIds"].List.Count()</td>
+			</tr>
+			<tr>
+				<td>Chain Type and ID Filter (should work)</td>
+				<td><em>Author</em> &amp; <em>@authorWithId.EntityIds</em></td>
+				<td>@Data["TypeAndIdFilterWorks"].List.Count()</td>
+			</tr>
+			<tr>
+				<td>Chain Type and ID-Filter (should not work)</td>
+				<td><em>Categories</em> &amp; <em>@authorWithSimpleContentId.EntityIds</em> </td>
+				<td>@Data["TypeAndIdFilterFails"].List.Count()</td>
+			</tr>
+		</table>
+	</div>
+</div>
